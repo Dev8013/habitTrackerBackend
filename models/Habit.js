@@ -21,6 +21,7 @@ const HabitSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Create the Habit model
 const Habit = mongoose.model('Habit', HabitSchema);
 
 export default Habit;
