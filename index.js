@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import Habit from './models/Habit.js';
 import User from './models/User.js';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
@@ -108,6 +109,32 @@ app.post('/tasks/:id/mark', async (req, res) => {
   }
 });
 
+app.post('/register', async (req, res) => {
+    try {
+        const {username, email, password} = req.body;
+        const user = new User({username, email, password});
+        await user.save();
+        const token = jwt.sign({userId: user._id}, process.env.JWT_SECRET, {expiresIn: '7d'});
+        res.json({token, user: {id: user._id, username}});
+    } catch (error) {
+        return res.status(500).json({message: "Server error registering the user"});
+    }
+})
+
+app.post('/login', async (req, res) => {
+    try {
+        const {email, password} = req.body;
+        const user = await User.findOne({email});
+        if(!user || !(await user.comparePassword(password))) {
+            return res.status(400).json({message: "Invalid email or password"});
+        }
+        const token = jwt.sign({userId : user._id}, process.env.JWT_SECRET, {expiresIn: '7d'});
+        res.json({token, user: {id: user._id, username: user.username}});
+    } catch (error) {
+        return res.status(500).json({message: "server login error"});
+    }
+})
+
 app.get('/users', async (req, res) => {
     try {
         const users = await User.find();
@@ -130,7 +157,6 @@ app.get('/user/:id', async (req, res) => {
     }
     res.status(200).json({message: "user found"});
     return res.status(200).json(user);
-
     } catch (error) {
         console.error('Error fetching user:', error);
         res.status(500).json({message: 'Internal Server Error'});
