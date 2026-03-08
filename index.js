@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import Habit from './models/Habit.js';
+import User from './models/User.js';
 
 dotenv.config();
 
@@ -106,3 +107,33 @@ app.post('/tasks/:id/mark', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+app.get('/users', async (req, res) => {
+    try {
+        const users = await User.find();
+        if(!users) {
+            return res.status(400).json({message: "No user found"});
+        }
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({message: "Internal Server Error"});
+    }
+})
+
+app.get('/user/:id', async (req, res) => {
+    try {
+        const {id} = req.params;
+        const user = await User.findById(id);
+    if(!id) {
+        return res.status(400).json({message: "ID does not exits"});
+    }
+    res.status(200).json({message: "user found"});
+    return res.status(200).json(user);
+
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        res.status(500).json({message: 'Internal Server Error'});
+    }
+
+})
